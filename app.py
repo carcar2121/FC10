@@ -2,254 +2,1139 @@ from pathlib import Path
 import re
 import pandas as pd
 import streamlit as st
-
-# ==========================================
-# CONFIGURACIÓN DE LA PÁGINA
-# ==========================================
+ 
+# ============================================================
+# FC10 | ENCICLOPEDIA HISTÓRICA DEL FÚTBOL
+# ============================================================
+ 
+BASE_DIR = Path(__file__).resolve().parent
+ 
+CSV_PATHS = [
+    BASE_DIR / "data" / "FC10_ganadores_futbol.csv",
+    BASE_DIR / "FC10_ganadores_futbol.csv",
+]
+ 
+COMMUNITY_URL = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=d1_RKkjT-02kscIk7Mr-aMAwOq-IwwpMmEXR7soT7LNUQlRTMEhJRkxHSTJWNFBFMldJTUJYTjc3SS4u%22"
+ 
 st.set_page_config(
-    page_title="FC10 | Enciclopedia Histórica del Fútbol",
+    page_title="FC10 | La historia del fútbol",
     page_icon="⚽",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed",
 )
-
-# ==========================================
-# ESTILOS VISUALES AVANZADOS (MARINA / DARK)
-# ==========================================
+ 
+# ============================================================
+# DISEÑO VISUAL
+# ============================================================
+ 
 st.markdown("""
 <style>
-    /* Estilos globales */
-    .stApp {
-        background-color: #030a17;
-        color: #f8fafc;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+ 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap%27);
+ 
+:root {
+    --navy: #081a33;
+    --blue: #1769e0;
+    --pale: #f3f6fa;
+    --ink: #14243b;
+    --muted: #6c7b90;
+}
+ 
+html, body, [class*="css"] {
+    font-family: 'DM Sans', sans-serif;
+}
+ 
+.stApp {
+    background: #f5f7fb;
+    color: var(--ink);
+}
+ 
+.block-container {
+    max-width: 1200px;
+    padding-top: 1.2rem;
+    padding-bottom: 3rem;
+}
+ 
+header[data-testid="stHeader"] {
+    background: transparent;
+}
+ 
+#MainMenu, footer {
+    visibility: hidden;
+}
+ 
+.brand-fallback {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 34px;
+    letter-spacing: -2px;
+    color: var(--navy);
+}
+ 
+.brand-caption {
+    color: #718096;
+    font-size: 9px;
+    letter-spacing: 2.4px;
+    margin-top: -7px;
+}
+ 
+.nav-label {
+    color: #718297;
+    font-size: 11px;
+    letter-spacing: 1.8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding-top: 15px;
+    text-align: right;
+}
+ 
+div[role="radiogroup"] {
+    gap: 8px;
+    justify-content: flex-end;
+}
+ 
+div[role="radiogroup"] label {
+    background: white;
+    border: 1px solid #e5eaf1;
+    border-radius: 22px;
+    padding: 7px 14px;
+}
+ 
+div[role="radiogroup"] label p {
+    font-size: 12px;
+    font-weight: 600;
+}
+ 
+.hero {
+    background: linear-gradient(
+        115deg,
+        #07182f 0%,
+        #102e55 65%,
+        #1556a8 100%
+    );
+    border-radius: 22px;
+    padding: 58px 58px 52px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+ 
+.hero:after {
+    content: "FC10";
+    position: absolute;
+    right: 28px;
+    bottom: -48px;
+    font-family: 'Playfair Display', serif;
+    font-size: 190px;
+    font-weight: 700;
+    color: rgba(255,255,255,.045);
+    letter-spacing: -15px;
+}
+ 
+.eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #8db9ff;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+}
+ 
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(38px,5vw,62px);
+    line-height: 1.08;
+    letter-spacing: -1.5px;
+    margin: 0 0 18px;
+    color: white;
+}
+ 
+.hero p {
+    color: #d7e2f1;
+    max-width: 570px;
+    font-size: 15px;
+    line-height: 1.8;
+    margin: 0;
+}
+ 
+.section-kicker {
+    color: #1769e0;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+}
+ 
+.section-title {
+    font-family: 'Playfair Display', serif;
+    color: #10233e;
+    font-size: 34px;
+    font-weight: 600;
+    margin: 0 0 8px;
+}
+ 
+.section-sub {
+    color: #748197;
+    font-size: 14px;
+    margin: 0 0 22px;
+}
+ 
+.panel {
+    background: white;
+    border: 1px solid #e8edf4;
+    border-radius: 16px;
+    padding: 22px;
+    height: 100%;
+}
+ 
+.panel-label {
+    color: #78869a;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+ 
+.panel-number {
+    font-family: 'Playfair Display', serif;
+    color: #10233e;
+    font-size: 36px;
+    font-weight: 700;
+    margin-top: 7px;
+}
+ 
+.panel-note {
+    color: #8793a4;
+    font-size: 12px;
+    margin-top: 2px;
+}
+ 
+.record-card {
+    background: white;
+    border: 1px solid #e7edf4;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+}
+ 
+.record-year {
+    color: #1769e0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+ 
+.record-winner {
+    color: #10233e;
+    font-size: 17px;
+    font-weight: 700;
+    margin-top: 5px;
+}
+ 
+.record-comp {
+    color: #7a8798;
+    font-size: 11px;
+    margin-top: 4px;
+}
+ 
+.story-box {
+    background: #edf3fb;
+    border-left: 3px solid #1769e0;
+    padding: 18px 20px;
+    border-radius: 0 12px 12px 0;
+    color: #53647a;
+    font-size: 13px;
+    line-height: 1.7;
+}
+ 
+.footer {
+    border-top: 1px solid #e3e9f1;
+    padding-top: 22px;
+    margin-top: 45px;
+    color: #8793a4;
+    font-size: 11px;
+}
+ 
+.stButton>button,
+.stLinkButton>a {
+    border-radius: 22px !important;
+    font-weight: 700 !important;
+}
+ 
+.stTextInput input,
+.stSelectbox div[data-baseweb="select"] {
+    border-radius: 10px !important;
+}
+ 
+div[data-testid="stDataFrame"] {
+    border: 1px solid #e7edf4;
+    border-radius: 12px;
+    overflow: hidden;
+}
+ 
+@media(max-width:700px) {
+    .hero {
+        padding: 34px 25px;
     }
-    
-    /* Encabezado Principal / Hero */
-    .fc-hero {
-        background: linear-gradient(135deg, #091c38 0%, #0d2a54 50%, #1e40af 100%);
-        border: 1px solid #1e3a8a;
-        border-radius: 20px;
-        padding: 40px;
-        color: #ffffff;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-        margin-bottom: 30px;
+ 
+    .section-title {
+        font-size: 28px;
     }
-    .fc-hero h1 {
-        font-size: 2.8rem;
-        font-weight: 800;
-        margin-bottom: 10px;
-        color: #ffffff;
-        letter-spacing: -0.5px;
+ 
+    .nav-label {
+        display: none;
     }
-    .fc-hero p {
-        font-size: 1.15rem;
-        color: #cbd5e1;
-        max-width: 800px;
-        line-height: 1.6;
-    }
-
-    /* Tarjetas de Contenido y Estadísticas */
-    .fc-card {
-        background: linear-gradient(145deg, #071528, #0a1f3d);
-        border: 1px solid #1e3a8a;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        margin-bottom: 20px;
-    }
-    
-    .metric-container {
-        background: linear-gradient(135deg, #0a2540 0%, #0d2a54 100%);
-        border: 1px solid #2563eb;
-        border-radius: 14px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-    
-    /* Ocultar elementos predeterminados de Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+}
+ 
 </style>
 """, unsafe_allow_html=True)
-
-# ==========================================
-# CARGA DE DATOS DESDE EXCEL
-# ==========================================
-BASE_DIR = Path(__file__).resolve().parent
-EXCEL_PATH = BASE_DIR / "data" / "FC10_ganadores_futbol.xlsx"
-
-@st.cache_data
+ 
+ 
+# ============================================================
+# CARGA DE BASE DE DATOS
+# ============================================================
+ 
 def load_data():
-    if not EXCEL_PATH.exists():
-        return pd.DataFrame()
-    try:
-        df = pd.read_excel(EXCEL_PATH)
-        df.columns = [str(c).strip() for c in df.columns]
-        return df
-    except Exception as e:
-        st.error(f"Error al leer el archivo: {e}")
-        return pd.DataFrame()
-
-raw_df = load_data()
-
-def process_records(df):
-    if df.empty:
-        return pd.DataFrame(columns=["Competición", "Año", "Ganador"])
-    
-    records = []
-    for col in df.columns:
-        comp_name = col.replace("Ganadores de ", "").strip()
-        for val in df[col].dropna():
-            text = str(val).strip()
-            match = re.match(r"^(\d{4})[\s\-–]+(.+)$", text)
-            if match:
-                records.append({
-                    "Competición": comp_name,
-                    "Año": int(match.group(1)),
-                    "Ganador": match.group(2).strip()
-                })
-            else:
-                records.append({
-                    "Competición": comp_name,
-                    "Año": None,
-                    "Ganador": text
-                })
-    return pd.DataFrame(records)
-
-records_df = process_records(raw_df)
-
-# ==========================================
-# BARRA LATERAL (SIDEBAR)
-# ==========================================
-with st.sidebar:
-    st.markdown("### ⚽ FC10 Navigation")
-    st.markdown("---")
-    selected = st.radio(
-        "Menú Principal",
-        ["Inicio", "Palmarés y Ganadores", "Estadísticas Globales", "Acerca de FC10"]
+ 
+    path = next(
+        (p for p in CSV_PATHS if p.exists()),
+        None
     )
-    st.markdown("---")
-    st.markdown("<p style='font-size: 0.85rem; color: #94a3b8;'>Plataforma oficial de consulta histórica del balompié mundial y regional.</p>", unsafe_allow_html=True)
-
-# ==========================================
-# CONTENIDO DE LAS SECCIONES
-# ==========================================
-
+ 
+    if not path:
+        return pd.DataFrame(), None, "No se encontró el CSV."
+ 
+    try:
+ 
+        raw = pd.read_csv(
+            path,
+            encoding="utf-8-sig"
+        )
+ 
+        if len(raw.columns) == 1:
+ 
+            raw = pd.read_csv(
+                path,
+                encoding="utf-8-sig",
+                sep=";"
+            )
+ 
+        raw.columns = [
+            str(c).strip()
+            for c in raw.columns
+        ]
+ 
+        return raw, path, None
+ 
+    except Exception as exc:
+ 
+        return (
+            pd.DataFrame(),
+            path,
+            f"No se pudo leer el CSV: {exc}"
+        )
+ 
+ 
+def split_year_value(value):
+ 
+    if pd.isna(value):
+        return None, ""
+ 
+    text = str(value).strip()
+ 
+    match = re.match(
+        r"^(\d{4})\s+(.+)$",
+        text
+    )
+ 
+    if match:
+ 
+        return (
+            int(match.group(1)),
+            match.group(2).strip()
+        )
+ 
+    match = re.match(
+        r"^(\d{4})[-/]\s*(.+)$",
+        text
+    )
+ 
+    if match:
+ 
+        return (
+            int(match.group(1)),
+            match.group(2).strip()
+        )
+ 
+    return None, text
+ 
+ 
+def normalize_records(raw):
+ 
+    mapping = {
+ 
+        "Ganadores de Balón de Oro":
+            "Balón de Oro",
+ 
+        "Ganadores de Champions League":
+            "Champions League",
+ 
+        "Ganadores de Bota de Oro":
+            "Bota de Oro",
+ 
+        "Ganadores de Liga MX":
+            "Liga MX",
+    }
+ 
+    records = []
+ 
+    for col, competition in mapping.items():
+ 
+        if col not in raw.columns:
+            continue
+ 
+        for value in raw[col].dropna():
+ 
+            year, winner = split_year_value(value)
+ 
+            if winner:
+ 
+                records.append({
+ 
+                    "Competición": competition,
+ 
+                    "Año": year,
+ 
+                    "Ganador": winner
+ 
+                })
+ 
+    df = pd.DataFrame(records)
+ 
+    if not df.empty:
+ 
+        df = df.sort_values(
+            ["Año", "Competición"],
+            ascending=[False, True],
+            na_position="last"
+        )
+ 
+    return df
+ 
+ 
+raw, csv_path, csv_error = load_data()
+ 
+records = (
+    normalize_records(raw)
+    if not raw.empty
+    else pd.DataFrame(
+        columns=[
+            "Competición",
+            "Año",
+            "Ganador"
+        ]
+    )
+)
+ 
+ 
+# ============================================================
+# CABECERA Y LOGOTIPO
+# ============================================================
+ 
+logo_candidates = [
+ 
+    BASE_DIR / "assets" / "logo_fc10.png",
+ 
+    BASE_DIR / "assets" / "fc10_logo.png",
+ 
+    BASE_DIR / "logo_fc10.png",
+ 
+]
+ 
+logo = next(
+    (p for p in logo_candidates if p.exists()),
+    None
+)
+ 
+left, right = st.columns([1, 3])
+ 
+with left:
+ 
+    if logo:
+ 
+        st.image(
+            str(logo),
+            width=155
+        )
+ 
+    else:
+ 
+        st.markdown(
+            """
+<div class="brand-fallback">FC10</div>
+<div class="brand-caption">
+                FOOTBALL CHRONICLES
+</div>
+            """,
+            unsafe_allow_html=True
+        )
+ 
+with right:
+ 
+    st.markdown(
+        """
+<div class="nav-label">
+            LA ENCICLOPEDIA HISTÓRICA DEL FÚTBOL
+</div>
+        """,
+        unsafe_allow_html=True
+    )
+ 
+st.markdown(
+    "<hr style='border:0;border-top:1px solid #e3e9f1;margin:12px 0 22px;'>",
+    unsafe_allow_html=True
+)
+ 
+ 
+# ============================================================
+# NAVEGACIÓN
+# ============================================================
+ 
+pages = [
+ 
+    "Inicio",
+ 
+    "Nosotros",
+ 
+    "Palmarés",
+ 
+    "Récords y estadísticas",
+ 
+    "Comunidad"
+ 
+]
+ 
+selected = st.radio(
+    "Navegación",
+    pages,
+    horizontal=True,
+    label_visibility="collapsed",
+    key="main_navigation"
+)
+ 
+st.write("")
+ 
+ 
+# ============================================================
+# FUNCIONES VISUALES
+# ============================================================
+ 
+def section(kicker, title, subtitle=""):
+ 
+    st.markdown(
+        f"""
+<div class="section-kicker">
+            {kicker}
+</div>
+ 
+        <h2 class="section-title">
+            {title}
+</h2>
+ 
+        <p class="section-sub">
+            {subtitle}
+</p>
+        """,
+        unsafe_allow_html=True
+    )
+ 
+ 
+def card_metric(label, number, note):
+ 
+    st.markdown(
+        f"""
+<div class="panel">
+ 
+            <div class="panel-label">
+                {label}
+</div>
+ 
+            <div class="panel-number">
+                {number}
+</div>
+ 
+            <div class="panel-note">
+                {note}
+</div>
+ 
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+ 
+ 
+def show_records(df):
+ 
+    if df.empty:
+ 
+        st.info(
+            "Todavía no hay registros disponibles en esta categoría."
+        )
+ 
+        return
+ 
+    for _, row in df.iterrows():
+ 
+        year = (
+            str(int(row["Año"]))
+            if pd.notna(row["Año"])
+            else "—"
+        )
+ 
+        st.markdown(
+            f"""
+<div class="record-card">
+ 
+                <div class="record-year">
+                    {year}
+</div>
+ 
+                <div class="record-winner">
+                    {row["Ganador"]}
+</div>
+ 
+                <div class="record-comp">
+                    {row["Competición"]}
+</div>
+ 
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+ 
+ 
+# ============================================================
+# PÁGINA DE INICIO
+# ============================================================
+ 
 if selected == "Inicio":
-    st.markdown("""
-    <div class="fc-hero">
-        <h1>⚽ FC10 · Enciclopedia Histórica</h1>
-        <p>El archivo definitivo que recopila la gloria de los torneos y galardones más prestigiosos del fútbol internacional: Balón de Oro, Bota de Oro, UEFA Champions League y Liga MX.</p>
+ 
+    st.markdown(
+        """
+<div class="hero">
+ 
+            <div class="eyebrow">
+                FC10 · Archivo histórico
+</div>
+ 
+            <h1>
+                La historia del fútbol,
+<br>
+                en un solo lugar.
+</h1>
+ 
+            <p>
+                Una enciclopedia para explorar campeones,
+                premios, equipos, récords y protagonistas
+                que han marcado el deporte. Consulta los
+                registros y descubre el contexto detrás
+                de cada época.
+</p>
+ 
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+ 
+    st.write("")
+ 
+    section(
+        "Explora FC10",
+        "Un archivo para descubrir",
+        "Consulta los grandes registros del fútbol y encuentra la información que buscas."
+    )
+ 
+    if csv_error:
+ 
+        st.warning(csv_error)
+ 
+    total = len(records)
+ 
+    winners = (
+        records["Ganador"].nunique()
+        if total
+        else 0
+    )
+ 
+    years = (
+        records["Año"].dropna()
+        if total
+        else pd.Series(dtype=float)
+    )
+ 
+    c1, c2, c3 = st.columns(3)
+ 
+    with c1:
+ 
+        card_metric(
+            "Registros cargados",
+            f"{total:,}",
+            "Datos disponibles en el archivo"
+        )
+ 
+    with c2:
+ 
+        card_metric(
+            "Ganadores / equipos",
+            f"{winners:,}",
+            "Nombres distintos registrados"
+        )
+ 
+    with c3:
+ 
+        card_metric(
+            "Años cubiertos",
+            (
+                f"{int(years.min())}–{int(years.max())}"
+                if len(years)
+                else "—"
+            ),
+            "Rango detectado en el CSV"
+        )
+ 
+    st.write("")
+ 
+    c1, c2 = st.columns([1.35, 1])
+ 
+    with c1:
+ 
+        section(
+            "Archivo",
+            "Últimos registros",
+            "Los datos más recientes de las cuatro colecciones."
+        )
+ 
+        show_records(
+            records.head(5)
+        )
+ 
+    with c2:
+ 
+        section(
+            "Colecciones",
+            "Explora por categoría"
+        )
+ 
+        for name in [
+ 
+            "Balón de Oro",
+ 
+            "Bota de Oro",
+ 
+            "Champions League",
+ 
+            "Liga MX"
+ 
+        ]:
+ 
+            count = (
+                int(
+                    (records["Competición"] == name).sum()
+                )
+                if total
+                else 0
+            )
+ 
+            st.markdown(
+                f"""
+<div class="record-card">
+ 
+                    <div class="record-winner">
+                        {name}
+</div>
+ 
+                    <div class="record-comp">
+                        {count} registros en el archivo
+</div>
+ 
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+ 
+ 
+# ============================================================
+# NOSOTROS
+# ============================================================
+ 
+elif selected == "Nosotros":
+ 
+    section(
+        "FC10",
+        "Una memoria del fútbol",
+        "Un espacio para consultar datos, reconocer protagonistas y entender por qué ciertos momentos se volvieron parte de la historia."
+    )
+ 
+    st.markdown(
+        """
+<div class="panel">
+ 
+            <h3 style="font-family:'Playfair Display',serif;color:#10233e;margin-top:0;">
+                ¿Qué es FC10?
+</h3>
+ 
+            <p style="color:#5e6e83;line-height:1.9;">
+                FC10 es una enciclopedia digital dedicada a reunir
+                información histórica del fútbol. Su objetivo es
+                que cualquier aficionado pueda consultar campeones,
+                temporadas, premios, equipos, jugadores y
+                acontecimientos importantes desde un mismo sitio.
+</p>
+ 
+            <h3 style="font-family:'Playfair Display',serif;color:#10233e;">
+                ¿Qué encontrarás?
+</h3>
+ 
+            <p style="color:#5e6e83;line-height:1.9;">
+                Registros de competiciones y premios, estadísticas
+                organizadas y, progresivamente, artículos que
+                expliquen el contexto de finales, temporadas,
+                récords y figuras del fútbol.
+</p>
+ 
+            <h3 style="font-family:'Playfair Display',serif;color:#10233e;">
+                Nuestro criterio
+</h3>
+ 
+            <p style="color:#5e6e83;line-height:1.9;">
+                Los datos se presentan como registros consultables.
+                Los artículos históricos se incorporarán cuando
+                hayan sido investigados y contrastados con fuentes
+                confiables.
+</p>
+ 
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+ 
+ 
+# ============================================================
+# PALMARÉS
+# ============================================================
+ 
+elif selected == "Palmarés":
+ 
+    section(
+        "Archivo de campeones",
+        "Palmarés",
+        "Busca por competición, año o ganador."
+    )
+ 
+    competitions = [
+ 
+        "Todas",
+ 
+        "Balón de Oro",
+ 
+        "Bota de Oro",
+ 
+        "Champions League",
+ 
+        "Liga MX"
+ 
+    ]
+ 
+    f1, f2, f3 = st.columns([1.2, 1, 1.5])
+ 
+    with f1:
+ 
+        comp = st.selectbox(
+            "Competición",
+            competitions
+        )
+ 
+    with f2:
+ 
+        years_available = (
+ 
+            sorted(
+                [
+                    int(y)
+                    for y in records["Año"].dropna().unique()
+                ],
+                reverse=True
+            )
+ 
+            if not records.empty
+ 
+            else []
+ 
+        )
+ 
+        year_options = (
+            ["Todos"]
+            + [str(y) for y in years_available]
+        )
+ 
+        year = st.selectbox(
+            "Año",
+            year_options
+        )
+ 
+    with f3:
+ 
+        query = st.text_input(
+            "Buscar ganador o equipo",
+            placeholder="Ej. Lionel Messi"
+        )
+ 
+    filtered = records.copy()
+ 
+    if comp != "Todas":
+ 
+        filtered = filtered[
+            filtered["Competición"] == comp
+        ]
+ 
+    if year != "Todos":
+ 
+        filtered = filtered[
+            filtered["Año"] == int(year)
+        ]
+ 
+    if query.strip():
+ 
+        filtered = filtered[
+            filtered["Ganador"].str.contains(
+                query.strip(),
+                case=False,
+                na=False
+            )
+        ]
+ 
+    st.caption(
+        f"{len(filtered)} resultados"
+    )
+ 
+    if filtered.empty:
+ 
+        st.info(
+            "No hay resultados con esos filtros. Prueba con otra búsqueda."
+        )
+ 
+    else:
+ 
+        st.dataframe(
+            filtered,
+            use_container_width=True,
+            hide_index=True,
+            height=min(
+                620,
+                45 + 38 * len(filtered)
+            )
+        )
+ 
+    st.markdown(
+        """
+<div class="story-box">
+ 
+            <strong>Ver la historia:</strong>
+ 
+            Las fichas narrativas de cada edición se
+            incorporarán progresivamente, con contexto,
+            protagonistas, momentos decisivos y fuentes.
+            No se muestran relatos ficticios ni información
+            sin verificar.
+ 
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+ 
+ 
+# ============================================================
+# RÉCORDS Y ESTADÍSTICAS
+# ============================================================
+ 
+elif selected == "Récords y estadísticas":
+ 
+    section(
+        "Los números del fútbol",
+        "Récords y estadísticas",
+        "Explora los datos disponibles y compara las colecciones del archivo."
+    )
+ 
+    if records.empty:
+ 
+        st.warning(
+            "No hay datos que analizar. Revisa que el CSV esté dentro de la carpeta data."
+        )
+ 
+    else:
+ 
+        c1, c2, c3 = st.columns(3)
+ 
+        with c1:
+ 
+            card_metric(
+                "Registros",
+                f"{len(records):,}",
+                "Total de filas interpretadas"
+            )
+ 
+        with c2:
+ 
+            card_metric(
+                "Ganadores distintos",
+                f"{records['Ganador'].nunique():,}",
+                "Nombres diferentes"
+            )
+ 
+        valid_years = records["Año"].dropna()
+ 
+        with c3:
+ 
+            card_metric(
+                "Año más antiguo",
+                (
+                    str(int(valid_years.min()))
+                    if len(valid_years)
+                    else "—"
+                ),
+                "Según el CSV"
+            )
+ 
+        st.write("")
+ 
+        section(
+            "Distribución",
+            "Registros por competición"
+        )
+ 
+        counts = (
+ 
+            records["Competición"]
+            .value_counts()
+            .reindex(
+                [
+                    "Balón de Oro",
+                    "Bota de Oro",
+                    "Champions League",
+                    "Liga MX"
+                ]
+            )
+            .fillna(0)
+            .astype(int)
+ 
+        )
+ 
+        st.bar_chart(
+            counts,
+            color="#1769e0"
+        )
+ 
+        section(
+            "Consulta",
+            "Ganadores más repetidos",
+            "Conteo de apariciones en las cuatro colecciones; no equivale necesariamente a títulos de una misma competición."
+        )
+ 
+        repeated = (
+ 
+            records["Ganador"]
+            .value_counts()
+            .head(10)
+            .rename_axis("Nombre")
+            .reset_index(name="Apariciones")
+ 
+        )
+ 
+        st.dataframe(
+            repeated,
+            use_container_width=True,
+            hide_index=True
+        )
+ 
+ 
+# ============================================================
+# COMUNIDAD
+# ============================================================
+ 
+elif selected == "Comunidad":
+ 
+    section(
+        "La comunidad FC10",
+        "Propón una historia",
+        "Las mejores propuestas podrán convertirse en artículos del archivo."
+    )
+ 
+    st.markdown(
+        """
+<div class="panel">
+ 
+            <h3 style="font-family:'Playfair Display',serif;color:#10233e;margin-top:0;">
+                ¿Qué historia del fútbol te gustaría leer?
+</h3>
+ 
+            <p style="color:#5e6e83;line-height:1.9;">
+                Puedes sugerir una final, una temporada, un jugador,
+                un equipo, un récord o un acontecimiento que merezca
+                ser contado. Revisaremos las propuestas y
+                seleccionaremos historias para publicar.
+</p>
+ 
+            <p style="color:#5e6e83;line-height:1.9;">
+                No necesitas crear una cuenta. Solo abre el
+                formulario y envía tu idea.
+</p>
+ 
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+ 
+    st.write("")
+ 
+    st.link_button(
+        "Enviar mi propuesta",
+        COMMUNITY_URL,
+        use_container_width=False
+    )
+ 
+ 
+# ============================================================
+# PIE DE PÁGINA
+# ============================================================
+ 
+st.markdown(
+    """
+<div class="footer">
+ 
+        <strong style="color:#10233e;">
+            FC10
+</strong>
+ 
+        · La enciclopedia histórica del fútbol
+ 
+        <br>
+ 
+        Datos, historias y momentos que marcaron el deporte.
+ 
     </div>
-    """, unsafe_allow_html=True)
-
-    if raw_df.empty:
-        st.warning("⚠️ No se detectó el archivo de datos en la ruta `data/FC10_ganadores_futbol.xlsx`. Verifica su ubicación.")
-    else:
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.markdown('<div class="metric-container"><h3>Registros</h3><h2>{}</h2></div>'.format(len(records_df)), unsafe_allow_html=True)
-        with col2:
-            st.markdown('<div class="metric-container"><h3>Competiciones</h3><h2>{}</h2></div>'.format(records_df["Competición"].nunique() if not records_df.empty else 0), unsafe_allow_html=True)
-        with col3:
-            st.markdown('<div class="metric-container"><h3>Protagonistas</h3><h2>{}</h2></div>'.format(records_df["Ganador"].nunique() if not records_df.empty else 0), unsafe_allow_html=True)
-        with col4:
-            st.markdown('<div class="metric-container"><h3>Estado</h3><h2>Activo 🟢</h2></div>', unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        st.markdown("### 🏆 Competencias Registradas en el Sistema")
-        c_a, c_b = st.columns(2)
-        with c_a:
-            st.markdown("""
-            <div class="fc-card">
-                <h4>🌟 Galardones Individuales</h4>
-                <p>Consulta los años, leyendas y goleadores históricos que se han consagrado con el <strong>Balón de Oro</strong> y la <strong>Bota de Oro</strong> a nivel mundial.</p>
-            </div>
-            """, unsafe_allow_html=True)
-        with c_b:
-            st.markdown("""
-            <div class="fc-card">
-                <h4>🛡️ Torneos de Clubes</h4>
-                <p>Explora el dominio de los gigantes europeos en la <strong>Champions League</strong> y la emoción de cada torneo Apertura y Clausura de la <strong>Liga MX</strong>.</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-elif selected == "Palmarés y Ganadores":
-    st.markdown("## 🏆 Palmarés Histórico y Filtrado Avanzado")
-    st.markdown("Consulta y filtra de manera dinámica todos los ganadores por categoría o mediante búsqueda directa.")
-    
-    if records_df.empty:
-        st.warning("No hay registros disponibles para mostrar.")
-    else:
-        f1, f2 = st.columns([1, 2])
-        with f1:
-            comp_filtro = st.selectbox("Filtrar por Competición", ["Todas", "Balón de Oro", "Bota de Oro", "Champions League", "Liga MX"])
-        with f2:
-            busqueda = st.text_input("🔍 Búsqueda inteligente por Jugador o Equipo", placeholder="Ej. Lionel Messi, Real Madrid, Erling Haaland...")
-        
-        df_show = records_df.copy()
-        if comp_filtro != "Todas":
-            df_show = df_show[df_show["Competición"] == comp_filtro]
-        
-        if busqueda.strip():
-            df_show = df_show[df_show["Ganador"].str.contains(busqueda.strip(), case=False, na=False)]
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.dataframe(df_show, use_container_width=True, hide_index=True)
-
-elif selected == "Estadísticas Globales":
-    st.markdown("## 📊 Análisis y Estadísticas Globales")
-    st.markdown("Desglose analítico de los datos históricos registrados en la plataforma.")
-    
-    if records_df.empty:
-        st.warning("No hay datos suficientes para generar estadísticas.")
-    else:
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            st.markdown('<div class="metric-container"><h3>Total Entradas</h3><h2>{}</h2></div>'.format(len(records_df)), unsafe_allow_html=True)
-        with m2:
-            st.markdown('<div class="metric-container"><h3>Categorías</h3><h2>{}</h2></div>'.format(records_df["Competición"].nunique()), unsafe_allow_html=True)
-        with m3:
-            st.markdown('<div class="metric-container"><h3>Promedio por Torneo</h3><h2>{:.1f}</h2></div>'.format(len(records_df) / records_df["Competición"].nunique()), unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        col_g1, col_g2 = st.columns(2)
-        
-        with col_g1:
-            st.markdown("""
-            <div class="fc-card">
-                <h3>📈 Distribución por Competición</h3>
-                <p style="color: #cbd5e1; font-size: 0.9rem;">Cantidad absoluta de registros históricos recopilados por cada galardón o torneo oficial.</p>
-            </div>
-            """, unsafe_allow_html=True)
-            conteo_comp = records_df["Competición"].value_counts()
-            st.bar_chart(conteo_comp)
-            
-        with col_g2:
-            st.markdown("""
-            <div class="fc-card">
-                <h3>📋 Tabla Resumen de Frecuencia</h3>
-                <p style="color: #cbd5e1; font-size: 0.9rem;">Participación porcentual y conteo exacto por categoría deportiva.</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            resumen_df = records_df["Competición"].value_counts().reset_index()
-            resumen_df.columns = ["Competición", "Total Registros"]
-            resumen_df["Porcentaje"] = ((resumen_df["Total Registros"] / len(records_df)) * 100).round(1).astype(str) + "%"
-            st.dataframe(resumen_df, use_container_width=True, hide_index=True)
-
-elif selected == "Acerca de FC10":
-    st.markdown("## ℹ️ Acerca de la Plataforma")
-    st.markdown("""
-    <div class="fc-card">
-        <h3>FC10 · Enciclopedia Histórica del Fútbol</h3>
-        <p>Desarrollado como una solución moderna, veloz y elegante para la gestión y consulta de datos deportivos mediante tecnologías de vanguardia como Streamlit y Pandas.</p>
-        <hr style="border-color: #1e3a8a;">
-        <p><strong>Diseño visual:</strong> Estética Marina / Dark Mode optimizada para una lectura profesional y cómoda.</p>
-        <p><strong>Versión del sistema:</strong> 2.5 Pro</p>
-    </div>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
+ 
+ 
+if csv_error and selected != "Inicio":
+ 
+    with st.expander("Diagnóstico del archivo"):
+ 
+        st.error(csv_error)
+ 
+        st.write(
+            "Ruta esperada:",
+            str(CSV_PATHS[0])
+        )
