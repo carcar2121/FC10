@@ -68,13 +68,7 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
     
-    /* Tablas y elementos interactivos */
-    stDataFrame {
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    
-    /* Ocultar elementos predeterminados de Streamlit para limpiar interfaz */
+    /* Ocultar elementos predeterminados de Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
@@ -127,7 +121,7 @@ def process_records(df):
 records_df = process_records(raw_df)
 
 # ==========================================
-# BARRA LATERAL (SIDEBAR) MEJORADA
+# BARRA LATERAL (SIDEBAR)
 # ==========================================
 with st.sidebar:
     st.markdown("### ⚽ FC10 Navigation")
@@ -166,7 +160,6 @@ if selected == "Inicio":
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Tarjetas de resumen por categoría
         st.markdown("### 🏆 Competencias Registradas en el Sistema")
         c_a, c_b = st.columns(2)
         with c_a:
@@ -209,23 +202,45 @@ elif selected == "Palmarés y Ganadores":
 
 elif selected == "Estadísticas Globales":
     st.markdown("## 📊 Análisis y Estadísticas Globales")
-    st.markdown("Distribución de los títulos y premios registrados dentro del archivo histórico.")
+    st.markdown("Desglose analítico de los datos históricos registrados en la plataforma.")
     
     if records_df.empty:
         st.warning("No hay datos suficientes para generar estadísticas.")
     else:
-        col_1, col_2 = st.columns([2, 1])
-        with col_1:
-            st.markdown("### Registros por Torneo / Premio")
-            conteo = records_df["Competición"].value_counts()
-            st.bar_chart(conteo)
-        with col_2:
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown('<div class="metric-container"><h3>Total Entradas</h3><h2>{}</h2></div>'.format(len(records_df)), unsafe_allow_html=True)
+        with m2:
+            st.markdown('<div class="metric-container"><h3>Categorías</h3><h2>{}</h2></div>'.format(records_df["Competición"].nunique()), unsafe_allow_html=True)
+        with m3:
+            st.markdown('<div class="metric-container"><h3>Promedio por Torneo</h3><h2>{:.1f}</h2></div>'.format(len(records_df) / records_df["Competición"].nunique()), unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col_g1, col_g2 = st.columns(2)
+        
+        with col_g1:
             st.markdown("""
             <div class="fc-card">
-                <h4>💡 Nota de Análisis</h4>
-                <p>Este gráfico muestra el balance de los datos almacenados en el sistema, permitiendo visualizar qué categoría posee mayor volumen de registros históricos.</p>
+                <h3>📈 Distribución por Competición</h3>
+                <p style="color: #cbd5e1; font-size: 0.9rem;">Cantidad absoluta de registros históricos recopilados por cada galardón o torneo oficial.</p>
             </div>
             """, unsafe_allow_html=True)
+            conteo_comp = records_df["Competición"].value_counts()
+            st.bar_chart(conteo_comp)
+            
+        with col_g2:
+            st.markdown("""
+            <div class="fc-card">
+                <h3>📋 Tabla Resumen de Frecuencia</h3>
+                <p style="color: #cbd5e1; font-size: 0.9rem;">Participación porcentual y conteo exacto por categoría deportiva.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            resumen_df = records_df["Competición"].value_counts().reset_index()
+            resumen_df.columns = ["Competición", "Total Registros"]
+            resumen_df["Porcentaje"] = ((resumen_df["Total Registros"] / len(records_df)) * 100).round(1).astype(str) + "%"
+            st.dataframe(resumen_df, use_container_width=True, hide_index=True)
 
 elif selected == "Acerca de FC10":
     st.markdown("## ℹ️ Acerca de la Plataforma")
